@@ -1,12 +1,9 @@
 """Multi level cache"""
-import functools
 import threading
 import warnings
 from collections import OrderedDict
-from pprint import pprint, pformat
+from pprint import pformat
 from time import sleep
-
-import yaml
 
 from custom_exceptions import StrategyNotSupported
 
@@ -125,9 +122,3 @@ class NCache:
 
     def __repr__(self):
         return str(self)
-
-
-if __name__ == "__main__":
-    with open("config.yml") as fp:
-        config = yaml.safe_load(fp)
-    cache = NCache(config)

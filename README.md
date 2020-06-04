@@ -8,7 +8,7 @@ tested to run on python 3.7.7. No external packages required
 
 Output should look something like
 ```bash
-sjangra in ~/personal/projects/multi_level_cache on master ● λ python3 client.py                                                                      40s 
+sjangra in ~/p/p/multi_level_cache >> python3 client.py
 read:  f=None, time taken: 0.61
 write: m=g, time taken: 0.61
 write: f=c, time taken: 0.61
@@ -30,4 +30,4 @@ read:  m=g, time taken: 0.31
 write: l=d, time taken: 0.61
 write: a=e, time taken: 0.61
 ```
-20 random events are generate to stimulate the cache
+N random events are generated to stimulate the cache
