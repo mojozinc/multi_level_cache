@@ -15,14 +15,16 @@ class bcolors:
     BOLD = "\033[1m"
     UNDERLINE = "\033[4m"
 
+domainSize = 6
+sampleSize = 20
 
 def main():
     config = []
     with open("config.yml") as fp:
         config = yaml.safe_load(fp)
     cache = NCache(config)
-    data = "a b c d e f g h i j k l m n".split()
-    for _ in range(20):
+    data = "abcdefghijklmnopqrstuvwxyz"[:min(domainSize, 26)]
+    for _ in range(sampleSize):
         k, v = random.choice(data), random.choice(data)
         if random.randint(0, 10) < 7:
             st = time()
