@@ -52,6 +52,7 @@ class LruCache:
     def __repr__(self):
         return str(self)
 
+
 class NCache:
     """Multi level cache"""
 
