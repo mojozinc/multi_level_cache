@@ -1,6 +1,7 @@
 """Multi level cache"""
 import warnings
 from collections import OrderedDict
+from pprint import pprint
 from time import sleep
 
 import yaml
@@ -8,8 +9,8 @@ import yaml
 from custom_exceptions import StrategyNotSupported
 
 MAX_LEVELS = 4
-READ_TIME_PER_LEVEL = [1, 2, 3, 4]
-WRITE_TIME_PER_LEVEL = [1, 2, 3, 4]
+READ_TIME_PER_LEVEL = [0.1, 0.2, 0.3, 0.4]
+WRITE_TIME_PER_LEVEL = [0.1, 0.2, 0.3, 0.4]
 
 
 class LruCache:
@@ -41,8 +42,8 @@ class NCache:
     """Multi level cache"""
     strategy_to_class = dict(lru=LruCache)
 
-    def __init__(self, configfile):
-        self.cache_config_list = yaml.safe_load(configfile)
+    def __init__(self, config):
+        self.cache_config_list = config
         if len(self.cache_config_list) > MAX_LEVELS:
             warnings.warn(
                 "Max cache levels exceeded\nwill only initiate {} levels".format(
@@ -69,7 +70,7 @@ class NCache:
         sleep(WRITE_TIME_PER_LEVEL[level])
         return popped
 
-    def read(self, key):
+    def read(self, key, debug=False):
         """Tries to read key from all levels,
         if found, updates all the lower cold caches
         """
@@ -94,3 +95,8 @@ class NCache:
             if _popped_:
                 popped[level] = _popped_
         return popped or None
+
+if __name__ == "__main__":
+    with open("config.yml") as fp:
+        config = yaml.safe_load(fp)
+    cache = NCache(config)
