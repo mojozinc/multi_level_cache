@@ -1,27 +1,39 @@
 """Multi level cache"""
-from collections import OrderedDict
-from exceptions import StrategyNotSupported
 import warnings
+from collections import OrderedDict
+from time import sleep
+
 import yaml
+
+from custom_exceptions import StrategyNotSupported
 
 MAX_LEVELS = 4
 READ_TIME_PER_LEVEL = [1, 2, 3, 4]
 WRITE_TIME_PER_LEVEL = [1, 2, 3, 4]
 
 
-class lrucache:
+class LruCache:
+    """least recently used, cache"""
     def __init__(self, capacity=0):
         self.capacity = capacity
         self.cache = OrderedDict()
 
     def read(self, key):
+        """read value of key, return none if cache miss"""
         if key not in self.cache:
             return None
         self.cache.move_to_end(key)  # make key hot
         return self.cache[key]
 
     def write(self, key, value):
-        self.cache[key] = value
+        """store value for key,
+        just increases priority, if key already present
+        optionally might return the evicted item if capacity is exceeded
+        """
+        if key in self.cache:
+            self.cache.move_to_end(key)
+        else:
+            self.cache[key] = value
         popped = None
         if len(self.cache) > self.capacity:
             popped = self.cache.popitem()
@@ -29,21 +41,24 @@ class lrucache:
 
 
 class NCache:
-    strategy_to_class = dict(lru=lrucache)
+    """Multi level cache"""
+    strategy_to_class = dict(lru=LruCache)
 
     def __init__(self, configfile):
         self.cache_config_list = yaml.safe_load(configfile)
         if len(self.cache_config_list) > MAX_LEVELS:
             warnings.warn(
-                "Max cache levels exceeded\nwill only initiate {} levels".format(MAX_LEVELS)
+                "Max cache levels exceeded\nwill only initiate {} levels".format(
+                    MAX_LEVELS
+                )
             )
         self.cache_stack = []
         for cache_config in self.cache_config_list[:MAX_LEVELS]:
-            startegy = cache_config["STRATEGY"]
+            strategy = cache_config["STRATEGY"]
             capacity = cache_config["CAPACITY"]
             if strategy not in self.strategy_to_class:
                 raise StrategyNotSupported()
-            cache_class = self.strategy_to_class(strategy)
+            cache_class = self.strategy_to_class[strategy]
             self.cache_stack.append(cache_class(capacity=capacity))
         self.levels = len(self.cache_stack)
 
@@ -58,9 +73,12 @@ class NCache:
         return popped
 
     def read(self, key):
+        """Tries to read key from all levels,
+        if found, updates all the lower cold caches
+        """
         for level in range(self.levels):
             value = self._read_level_(level, key)
-            if value != None:
+            if value is not None:
                 # cache hit
                 # update all cold cache levels
                 for cold_level in range(level):
@@ -70,8 +88,12 @@ class NCache:
         return None
 
     def write(self, key, value):
-        popped = []
+        """writes a key value pair to all cache levels
+        returns a dict of popped items, if any None if no items were popped
+        """
+        popped = {}
         for level in range(self.levels):
             _popped_ = self._write_level_(level, key, value)
-            popped.append(_popped_)
-        return popped
+            if _popped_:
+                popped[level] = _popped_
+        return popped or None
