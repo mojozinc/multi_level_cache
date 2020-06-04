@@ -1,0 +1,2 @@
+class StrategyNotSupported(Exception):
+    pass
