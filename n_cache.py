@@ -30,13 +30,10 @@ class LruCache:
         just increases priority, if key already present
         optionally might return the evicted item if capacity is exceeded
         """
-        if key in self.cache:
-            self.cache.move_to_end(key)
-        else:
-            self.cache[key] = value
+        self.cache[key] = value
         popped = None
         if len(self.cache) > self.capacity:
-            popped = self.cache.popitem()
+            popped = self.cache.popitem(last=False)
         return popped
 
 
